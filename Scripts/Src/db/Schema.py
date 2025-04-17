@@ -48,6 +48,7 @@ def create_table(cursor):
         eps_growth NUMERIC,
         dividend_yield NUMERIC,
         debt_to_equity NUMERIC,
+        current_ratio NUMERIC,
         market_cap BIGINT,        
         operating_cash_flow BIGINT,
         free_cash_flow BIGINT,

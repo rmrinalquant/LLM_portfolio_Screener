@@ -44,5 +44,4 @@ def batch(data,size = 100):
         count = count+size
     
     return chunk_list
-
-    
+ 

@@ -1,8 +1,7 @@
 import yfinance as yf
 import time
 
-
-def data_staging(data, Pk_name = "Us"):
+def data_staging(data, pair = None , Pk_name = "Us"):
     '''
     Gather data from yfinance.Tickers.info (explicitily)
     Always initialize root table  and insert the data first , then follow up by other insertion.
@@ -17,7 +16,8 @@ def data_staging(data, Pk_name = "Us"):
     Returns
     -------
     Data: list of list
-
+        # Note for the case of Foreign keys, map manually in pipeline script 
+    
     Potential errors
     ----------------
     401 or 429 : Unauthorized or too many requests 
@@ -25,47 +25,65 @@ def data_staging(data, Pk_name = "Us"):
 
     Future enhancemts
     ----------------
-    Dynamic - .info.get("key") data -- fetched from yahoo not hard coded
+    Dynamic - .info.get("key") data -- fetched from yahoo not hard coded - User input Dictionary
 
+    MetaData: 
+    ---------
+        tickers.tickers[ticker].info.get("longName", "Unknown"),
+        tickers.tickers[ticker].info.get("sector", "Unknown"),
+        tickers.tickers[ticker].info.get("country", "Unknown"),
+        tickers.tickers[ticker].info.get("industry", "Unknown"),
+        tickers.tickers[ticker].info.get("longBusinessSummary", "No summary available")
+    
     Fundamental metrics: 
     -------------------
-        tickers.tickers[ticker].info.get('trailingPE'),
-        tickers.tickers[ticker].info.get('forwardPE'),
-        tickers.tickers[ticker].info.get('priceToBook'),
-        tickers.tickers[ticker].info.get('priceToSalesTrailing12Months'),
-        tickers.tickers[ticker].info.get('pegRatio'),
-        tickers.tickers[ticker].info.get('profitMargins'),
-        tickers.tickers[ticker].info.get('returnOnEquity'),
-        tickers.tickers[ticker].info.get('returnOnAssets'),
-        tickers.tickers[ticker].info.get('revenueGrowth'),
-        tickers.tickers[ticker].info.get('earningsQuarterlyGrowth'),
-        tickers.tickers[ticker].info.get('dividendYield') or info.get('trailingAnnualDividendYield'),
-        tickers.tickers[ticker]info.get('debtToEquity'),
-        tickers.tickers[ticker].info.get('marketCap'),
-        tickers.tickers[ticker].info.get('operatingCashflow'),
-        tickers.tickers[ticker].info.get('freeCashflow'),
+        tickers.tickers[ticker].info.get('trailingPE','Null'),
+        tickers.tickers[ticker].info.get('forwardPE','Null'),
+        tickers.tickers[ticker].info.get('priceToBook','Null'),
+        tickers.tickers[ticker].info.get('priceToSalesTrailing12Months','Null'),
+        tickers.tickers[ticker].info.get('pegRatio','Null'),
+        tickers.tickers[ticker].info.get('profitMargins','Null'),
+        tickers.tickers[ticker].info.get('returnOnEquity','Null'),
+        tickers.tickers[ticker].info.get('returnOnAssets','Null'),
+        tickers.tickers[ticker].info.get('revenueGrowth','Null'),
+        tickers.tickers[ticker].info.get('earningsQuarterlyGrowth','Null'),
+        tickers.tickers[ticker].info.get('dividendYield') or info.get('trailingAnnualDividendYield', 'Null'),
+        tickers.tickers[ticker]info.get('debtToEquity', 'Null'),
+        tickers.tickers[ticker].info.get('marketCap', 'Null'),
+        tickers.tickers[ticker].info.get('operatingCashflow', 'Null'),
+        tickers.tickers[ticker].info.get('freeCashflow', 'Null'),
 
-    Furture Work 
-    ------------
-    Make it Dynamic - user sends the columns to be fetched
     '''
     staged_data = []
     count = 1
     for i in data:
-
         tickers = yf.Tickers(i)
         for j, ticker in enumerate(i, start= count):
+            if pair is not None:
+                _stock_id = pair[ticker]
+
             attempt = 0
             while attempt < 2:
                 try:
-
                     staged_data.append((
-                        ticker, 
-                        tickers.tickers[ticker].info.get("longName", "Unknown"),
-                        tickers.tickers[ticker].info.get("sector", "Unknown"),
-                        tickers.tickers[ticker].info.get("country", "Unknown"),
-                        tickers.tickers[ticker].info.get("industry", "Unknown"),
-                        tickers.tickers[ticker].info.get("longBusinessSummary", "No summary available")))
+                        _stock_id,
+                        tickers.tickers[ticker].info.get('trailingPE', 0),
+                        tickers.tickers[ticker].info.get('forwardPE', 0),
+                        tickers.tickers[ticker].info.get('priceToBook', 0),
+                        tickers.tickers[ticker].info.get('priceToSalesTrailing12Months', 0),
+                        tickers.tickers[ticker].info.get('pegRatio', 0),
+                        tickers.tickers[ticker].info.get('profitMargins', 0),
+                        tickers.tickers[ticker].info.get('returnOnEquity', 0),
+                        tickers.tickers[ticker].info.get('returnOnAssets', 0),
+                        tickers.tickers[ticker].info.get('revenueGrowth', 0),
+                        tickers.tickers[ticker].info.get('earningsQuarterlyGrowth', 0),
+                        tickers.tickers[ticker].info.get('trailingAnnualDividendYield', 0),
+                        tickers.tickers[ticker].info.get('debtToEquity', 0),
+                        tickers.tickers[ticker].info.get('marketCap', 0),
+                        tickers.tickers[ticker].info.get('operatingCashflow', 0),
+                        tickers.tickers[ticker].info.get('freeCashflow', 0),
+
+                        ))
                     break
                 except Exception as e:
                     attempt += 1    
