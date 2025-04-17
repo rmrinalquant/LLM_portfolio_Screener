@@ -1,0 +1,11 @@
+
+Sklearn 
+Tensorflow 
+Keras 
+Pandas     
+Numpy                
+Matplotlib
+Seaborn
+yfinance 
+
+
