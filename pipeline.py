@@ -49,20 +49,35 @@ def large_bathc_job(data, query, cursor):
         print("Inserted data:",staged_data)
         print("Sleeping for 100 seconds")          
         time.sleep(2)
-        
+
+def root_data(data,cursor):
+    root_query = "Insert into MetaData_US_companies (Ticker, Company, Sector, Country, Industry, BusinessSummary) VALUES %s ON CONFLICT (Ticker) DO NOTHING"
+    small_batch_job(data, root_query, cursor)
+    
+def fundamental_data(data,cursor):
+    cursor.execute("Select Stock_Id,Ticker from MetaData_US_companies")
+    query = "Insert into Fundamental_Metrics ( Stock_Id,trailing_pe,forward_pe,\
+                    price_to_book,price_to_sales,peg_ratio,profit_margin,return_on_equity,return_on_assets,revenue_growth,\
+                        eps_growth,dividend_yield,debt_to_equity,market_cap,operating_cash_flow,free_cash_flow) VALUES %s ON CONFLICT (Stock_Id) DO NOTHING"
+    _data = cursor.fetchall()
+    chunk = general.batch(data, 100)
+    pair = {ticker: _id for _id, ticker in _data}
+    staged_data = y_finance_fetch.data_staging(chunk, pair)
+    insert_data.insert_data(staged_data, query, cursor) 
+    print("Inserted data:",staged_data)
+
+
 def main():
     
     conn = connection.get_connection(path)
     cursor = conn.cursor()
     
     #Schema.drop_table(cursor)
-    Schema.create_table(cursor)
-
-    root_query = "Insert into MetaData_US_companies (Ticker, Company, Sector, Country, Industry, BusinessSummary) VALUES %s ON CONFLICT (Ticker) DO NOTHING"
-    fundamental_query = " Insert into Fundamental_Metrics (Ticker, Price, BookValue, PE, MarketCap, Dividend) VALUES %s ON CONFLICT (Ticker) DO NOTHING"
+    #Schema.create_table(cursor)
     data = pd.read_csv(data_path('S&p_500.csv'))['Symbol'].to_list()
+    fundamental_data(data,cursor)
     
-    small_batch_job(data, root_query, cursor)
+    root_query = "Insert into MetaData_US_companies (Ticker, Company, Sector, Country, Industry, BusinessSummary) VALUES %s ON CONFLICT (Ticker) DO NOTHING"    
     #half = len(data)//2      # Send the data in batches hiting rate limit -- send half and other half after 15 mins -- input manually in the job function 
 
     #job(data[2000:4000], root_query, cursor)
